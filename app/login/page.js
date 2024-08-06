@@ -1,8 +1,16 @@
+import Login from "../_components/auth/Login";
+import Logo from "../_components/ui/Logo";
+import { signInAction } from "../_lib/services/actions";
+
 function page() {
   return (
-    <div>
-      <p>Login</p>
-    </div>
+    <form
+      className="flex flex-col items-center justify-center h-screen px-6"
+      action={signInAction}
+    >
+      <Logo />
+      <Login />
+    </form>
   );
 }
 

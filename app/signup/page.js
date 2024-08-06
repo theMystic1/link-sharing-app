@@ -1,10 +1,17 @@
-import SignupItems from "../_components/auth/SignupItems";
+import Signup from "../_components/auth/Signup";
+import Logo from "../_components/ui/Logo";
+import { signup } from "../_lib/services/actions";
 
-function page() {
+async function page() {
+  // const data = await signup();
   return (
-    <div>
-      <SignupItems />
-    </div>
+    <form
+      className="flex flex-col md:items-center md:justify-center h-screen px-6"
+      action={signup}
+    >
+      <Logo />
+      <Signup />
+    </form>
   );
 }
 

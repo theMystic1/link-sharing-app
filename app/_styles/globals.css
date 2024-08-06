@@ -18,9 +18,44 @@
     width: 20px;
     aspect-ratio: 1;
     border-radius: 50%;
-    /* border: 2px solid theme("colors.primary.200"); */
+    border: 2px solid theme("colors.white.200");
     border-right-color: transparent;
     animation: rotate 1s infinite linear;
+  }
+
+  .file-upload-wrapper {
+    position: relative;
+    display: inline-block;
+  }
+
+  .file-input {
+    position: absolute;
+
+    width: 400px;
+    height: 480px;
+    opacity: 0;
+    cursor: pointer;
+  }
+
+  .file-upload-button {
+    display: flex;
+  }
+
+  .file-upload-button .relative {
+    height: 32px; /* replace with h-8 */
+    width: 32px; /* replace with w-8 */
+  }
+
+  .file-upload-button p {
+    color: #7b61ff; /* replace with text-purples-500 */
+  }
+
+  /* Add responsive styles */
+  @media (min-width: 1024px) {
+    .file-upload-button {
+      width: 36px; /* replace with lg:w-36 */
+      height: 36px; /* replace with lg:h-36 */
+    }
   }
 
   @keyframes rotate {
