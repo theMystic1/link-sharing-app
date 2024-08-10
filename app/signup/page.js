@@ -5,10 +5,7 @@ import { signup } from "../_lib/services/actions";
 async function page() {
   // const data = await signup();
   return (
-    <form
-      className="flex flex-col md:items-center md:justify-center h-screen px-6"
-      action={signup}
-    >
+    <form className="flex flex-col md:items-center md:justify-center h-screen px-6">
       <Logo />
       <Signup />
     </form>

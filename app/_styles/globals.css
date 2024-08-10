@@ -15,7 +15,7 @@
 
   .spinner-mini {
     margin: 0;
-    width: 20px;
+    width: 28px;
     aspect-ratio: 1;
     border-radius: 50%;
     border: 2px solid theme("colors.white.200");

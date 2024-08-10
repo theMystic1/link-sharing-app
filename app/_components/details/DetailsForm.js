@@ -8,8 +8,43 @@ import imageUploadIconact from "@/public/assets/images/icon-upload-image-active.
 
 import Button from "../ui/Button";
 import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { updateUser } from "@/app/_lib/services/actions";
+import SpinnerMini from "../ui/SpinnerMini";
+import { uploadImage } from "@/app/_lib/services/data-service";
 
-function DetailsForm() {
+function DetailsForm({ curUser }) {
+  const { register, handleSubmit, reset, formState } = useForm();
+
+  const [isLoading, setIsLoading] = useState(false);
+
+  const { errors } = formState;
+
+  async function onSubmit(data) {
+    setIsLoading(true);
+
+    try {
+      let imageUrl = data.imageUrl; // Default to existing imageUrl
+
+      if (data.imageUrl[0]) {
+        // If a new image was uploaded
+        imageUrl = await uploadImage(data.imageUrl[0]); // Upload the image and get the URL
+      }
+
+      // Create the user object with serializable data
+      const dataObj = { ...data, imageUrl };
+
+      // Call the server-side function with serializable data
+      await updateUser(curUser.user_Id, dataObj);
+      reset();
+    } catch (error) {
+      console.error("Error during submission:", error);
+      throw new Error(error);
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
   return (
     <div className="flex flex-col bg-white-200 pt-8 gap-4 px-6 2xl:px-20 rounded-md relative">
       <AuthHeader>ProfilecDetails</AuthHeader>
@@ -20,34 +55,74 @@ function DetailsForm() {
 
       <FlexDiv>
         <AuthMessage>profile Picture</AuthMessage>
-        <ImageAdd />
+        <ImageAdd register={register} curUser={curUser} />
       </FlexDiv>
 
       <FlexDiv>
         <AuthMessage>First Name*</AuthMessage>
-        <input
-          type="text"
-          placeholder="e.g. Alex Smith"
-          className="h-12 w-full  outline-none placeholder:text-lg placeholder:text-greyy-700 border border-greyy-700 rounded-md pl-8 pr-12"
-        />
+
+        <span className="flex flex-col gap-2">
+          <p className="text-red-600">{errors?.firstName?.message}</p>
+          <input
+            type="text"
+            placeholder="e.g. Smith"
+            className={`h-12 w-full  outline-none placeholder:text-lg placeholder:text-greyy-700 border ${
+              errors.firstName ? "border-red-700" : "border-greyy-700"
+            } rounded-md pl-8 pr-12`}
+            id="firstName"
+            defaultValue={curUser?.firstName}
+            {...register("firstName", {
+              required: "Can't be empty",
+            })}
+          />
+        </span>
 
         <AuthMessage>Last Name*</AuthMessage>
-        <input
-          type="text"
-          placeholder="e.g. Alex"
-          className="h-12 w-full  outline-none placeholder:text-lg placeholder:text-greyy-700 border border-greyy-700 rounded-md pl-8 pr-12"
-        />
+
+        <span className="flex flex-col gap-2">
+          <p className="text-red-600">{errors?.lastName?.message}</p>
+
+          <input
+            type="text"
+            placeholder="e.g. Alex"
+            className={`h-12 w-full  outline-none placeholder:text-lg placeholder:text-greyy-700 border ${
+              errors.lastName ? "border-red-700" : "border-greyy-700"
+            } rounded-md pl-8 pr-12`}
+            id="lastName"
+            defaultValue={curUser.lastName}
+            {...register("lastName", {
+              required: "Can't be empty",
+            })}
+          />
+        </span>
 
         <AuthMessage>Email</AuthMessage>
-        <input
-          type="text"
-          placeholder="e.g. Smith@example.com"
-          className="h-12 w-full  outline-none placeholder:text-lg placeholder:text-greyy-700 border border-greyy-700 rounded-md pl-8 pr-12"
-        />
+
+        <span className="flex flex-col gap-2">
+          <p className="text-red-600">{errors?.email?.message}</p>
+          <input
+            type="text"
+            disabled={true}
+            placeholder="e.g. Smith@example.com"
+            className={`h-12 w-full  outline-none placeholder:text-lg placeholder:text-greyy-700 border ${
+              errors.email ? "border-red-700" : "border-greyy-700"
+            } rounded-md pl-8 pr-12`}
+            defaultValue={curUser?.email}
+            // {...register("email", {
+            //   required: "Can't be empty",
+            //   pattern: {
+            //     value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+            //     message: "Invalid email address",
+            //   },
+            // })}
+          />
+        </span>
       </FlexDiv>
       <div className="h-36 "></div>
       <div className="border-t border-t-greyy-200 py-6 flex justify-end ">
-        <Button>Save</Button>
+        <Button onClick={handleSubmit(onSubmit)}>
+          {isLoading ? <SpinnerMini /> : "Save"}
+        </Button>
       </div>
     </div>
   );
@@ -61,8 +136,10 @@ function FlexDiv({ children }) {
   );
 }
 
-function ImageAdd() {
+function ImageAdd({ register, curUser }) {
   const [img, setImg] = useState(null);
+
+  const { imageUrl } = curUser || {};
 
   function handleFileUpload(e) {
     const file = e.target.files[0];
@@ -77,13 +154,6 @@ function ImageAdd() {
 
   return (
     <div className="grid md:grid-cols-2 items-center justify-center gap-6 lg:gap-2">
-      {/* <button className="flex  bg-purples-50 h items-center justify-center lg:w-36 rounded-md h-48  w-40 lg:h-36 flex-col">
-        <div className="relative h-8 w-8">
-          <Image src={imageUploadIcon} fill alt="Upload image" />
-        </div>
-
-        <p className="text-purples-500 ">+ Upload Image</p>
-      </button> */}
       <button
         className={`relative flex items-center justify-center lg:w-36 rounded-md h-48 w-40 lg:h-36  flex-col cursor-pointer ${
           img ? "bg-greyy-900 bg-opacity-20" : "bg-purples-50"
@@ -94,12 +164,16 @@ function ImageAdd() {
           accept="image/*"
           className="absolute inset-0 opacity-0 cursor-pointer"
           onChange={handleFileUpload}
+          id="imageUrl"
+          {...register("imageUrl", {
+            required: "Please upload an image",
+          })}
         />
-        {img ? (
+        {img || imageUrl ? (
           <>
             <div className="relative lg:w-36 rounded-md h-48 w-40 lg:h-36   overflow-hidden flex flex-col items-center justify-center">
               <Image
-                src={img}
+                src={imageUrl ? imageUrl : img}
                 fill
                 objectFit="cover"
                 alt="Uploaded Image"
@@ -110,6 +184,9 @@ function ImageAdd() {
                 accept="image/*"
                 className="absolute z-50 inset-0 opacity-0 cursor-pointer"
                 onChange={handleFileUpload}
+                {...register("imageUrl", {
+                  required: "Please upload an image",
+                })}
               />
               <div className="absolute inset-0 bg-black opacity-50 rounded-md"></div>
               <div className="relative z-10 h-8 w-8">

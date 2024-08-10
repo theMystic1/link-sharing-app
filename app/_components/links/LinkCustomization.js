@@ -8,9 +8,28 @@ import Button from "../ui/Button";
 import illustration from "@/public/assets/images/illustration-empty.svg";
 import { useState } from "react";
 import LinkForm from "./LinkForm";
+import { useForm } from "react-hook-form";
+import { linkTypes } from "@/app/_lib/services/data-service";
+import SpinnerMini from "../ui/SpinnerMini";
+import { revalidatePath } from "next/cache";
+import { createLink, updateLink } from "@/app/_lib/services/actions";
 
-function LinkCustomization() {
+function LinkCustomization({ id, links }) {
   const [isForm, setIsForm] = useState(false);
+  const [activeLink, setActiveLink] = useState(null);
+  const [activeLinkById, setActiveLinkById] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const {
+    register,
+    formState,
+    handleSubmit,
+    getValues,
+    setError,
+    reset,
+    setValue,
+  } = useForm();
+
+  const { errors } = formState;
 
   function handleForm() {
     setIsForm(true);
@@ -19,6 +38,25 @@ function LinkCustomization() {
   function hideLinkForm() {
     setIsForm(false);
   }
+
+  async function onSubmit(data) {
+    setIsLoading(true);
+    try {
+      const dataObj = {
+        link: data?.urlInput,
+        name: activeLink?.name,
+        owner_Id: id,
+        icon: linkTypes.find((link) => link.id === activeLink.id).linkIcon.src,
+      };
+      await createLink(dataObj);
+      reset();
+    } catch (error) {
+      throw new Error(error);
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
   return (
     <div className="flex flex-col bg-white-200 pt-8 gap-4 px-4 md:px-6 2xl:px-20 rounded-md relative">
       <AuthHeader>Customize your links</AuthHeader>
@@ -32,7 +70,34 @@ function LinkCustomization() {
         + Add new link
       </Button>
       {isForm ? (
-        <LinkForm formNum={1} onHandleFormClose={hideLinkForm} />
+        <LinkForm
+          formNum={1}
+          onHandleFormClose={hideLinkForm}
+          register={register}
+          errors={errors}
+          getValues={getValues}
+          setError={setError}
+          activeLink={activeLink}
+          setActiveLink={setActiveLink}
+          type="new"
+          setValue={setValue}
+        />
+      ) : links.length > 0 ? (
+        links?.map((link, i) => (
+          <LinkForm
+            key={link.id}
+            formNum={i + 1}
+            register={register}
+            activeLink={activeLink}
+            setActiveLink={setActiveLink}
+            errors={errors}
+            getValues={getValues}
+            setError={setError}
+            link={link}
+            type="edit"
+            setValue={setValue}
+          />
+        ))
       ) : (
         <>
           <div className="bg-greyy-100 w-full rounded-sm flex flex-col gap-6 items-center justify-center mt-8 ">
@@ -52,7 +117,9 @@ function LinkCustomization() {
       <div className="h-24 "></div>
 
       <div className="border-t border-t-greyy-200 py-6 flex justify-end ">
-        <Button>Save</Button>
+        <Button onClick={handleSubmit(onSubmit)}>
+          {isLoading ? <SpinnerMini /> : "Save"}
+        </Button>
       </div>
     </div>
   );

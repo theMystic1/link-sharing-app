@@ -4,10 +4,7 @@ import { signInAction } from "../_lib/services/actions";
 
 function page() {
   return (
-    <form
-      className="flex flex-col items-center justify-center h-screen px-6"
-      action={signInAction}
-    >
+    <form className="flex flex-col items-center justify-center h-screen px-6">
       <Logo />
       <Login />
     </form>

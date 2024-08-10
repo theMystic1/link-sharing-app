@@ -15,13 +15,25 @@ import { signInAction } from "@/app/_lib/services/actions";
 import { useFormStatus } from "react-dom";
 import Spinner from "../ui/Spinner";
 import SpinnerMini from "../ui/SpinnerMini";
+import { useState } from "react";
 
 function Login() {
-  const { register, formState } = useForm();
+  const { register, formState, handleSubmit } = useForm();
 
-  const { pending } = useFormStatus();
+  const [pending, setPending] = useState(false);
 
   const { errors } = formState;
+
+  async function onSubmit(formData) {
+    setPending(true);
+    try {
+      await signInAction(formData);
+    } catch (error) {
+      throw new Error(error);
+    } finally {
+      setPending(false);
+    }
+  }
 
   return (
     <div className="rounded-md">
@@ -72,7 +84,9 @@ function Login() {
           />
         </AuthInput>
 
-        <Button>{pending ? <SpinnerMini /> : "Login"}</Button>
+        <Button onClick={handleSubmit(onSubmit)}>
+          {pending ? <SpinnerMini /> : "Login"}
+        </Button>
 
         <AuthMessage className="text-center">
           Don&apos;t have an account?{" "}

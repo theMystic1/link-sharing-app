@@ -3,11 +3,50 @@
 import { cookies } from "next/headers";
 import { supabase } from "../supabase/supabase";
 import { redirect } from "next/navigation";
-import { createUser, getUser } from "./data-service";
+import { revalidatePath } from "next/cache";
+import { getUser } from "./data-service";
+
+export async function createLink(link) {
+  const { data, error } = await supabase.from("links").insert([link]);
+
+  if (error) {
+    console.error(error);
+    throw new Error(error.message, "Unable to create link");
+  }
+
+  revalidatePath("/");
+  return data;
+}
+
+export async function deleteLinkById(id) {
+  const { error } = await supabase.from("links").delete().eq("id", id);
+
+  if (error) {
+    console.error("Error deleting link:", error.message);
+    throw new Error(error.message, "Unable to delete link");
+  }
+
+  revalidatePath("/");
+}
+
+export async function updateLink(id, link) {
+  const { data, error } = await supabase
+    .from("links")
+    .update(link)
+    .eq("id", id);
+
+  if (error) {
+    console.error("Error updating link:", error.message);
+    throw new Error(error.message, "Unable to update link");
+  }
+
+  revalidatePath("/");
+  return data;
+}
 
 export async function signInAction(formData) {
-  const password = formData.get("password");
-  const email = formData.get("email");
+  const { password } = formData;
+  const { email } = formData;
 
   const userData = { email, password };
   const { data, error } = await supabase.auth.signInWithPassword(userData);
@@ -27,15 +66,21 @@ export async function signInAction(formData) {
 
   const existingUser = await getUser(data?.user.id);
 
-  if (!existingUser) createUser(data?.user);
+  if (existingUser) {
+    redirect("/");
+    return;
+  }
 
-  redirect("/");
+  if (!existingUser) {
+    createUser(data?.user);
+
+    redirect("/");
+  }
   return { success: true };
 }
 
 export async function signup(formData) {
-  const password = formData.get("password");
-  const email = formData.get("email");
+  const { email, password } = formData;
   const { data, error } = await supabase.auth.signUp({ email, password });
 
   if (error) {
@@ -44,6 +89,35 @@ export async function signup(formData) {
   }
 
   redirect("/login");
+  return data;
+}
+
+export async function getSession() {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  return user;
+}
+
+export async function updateUser(id, user) {
+  // Updating the user record with the correct image URL or path
+  const { data, error } = await supabase
+    .from("owners")
+    .update(user)
+    .eq("user_Id", id)
+    .select();
+
+  if (error) {
+    console.error("Error updating user:", error.message);
+    throw new Error(error.message);
+  }
+
+  // If the image already has a path, return the updated data
+
+  // Revalidate the path if necessary
+  revalidatePath("/details");
+
   return data;
 }
 
