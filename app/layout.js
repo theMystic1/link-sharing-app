@@ -11,7 +11,7 @@ const InstrumentSans = Instrument_Sans({
 export const metadata = {
   title: {
     template: "%s -  Developer Links",
-    default: "Welcome - Developer Links ",
+    default: "Welcome - Developer's Links ",
   },
   description: "Welcome to developer's link sharing hub",
 };

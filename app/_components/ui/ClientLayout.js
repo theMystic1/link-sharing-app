@@ -14,7 +14,7 @@ function ClientLayout({ children }) {
       <main
         className={`mx-auto ${
           pathname === "/profile" ? "" : "sm:px-2 md:px-8"
-        } w-full min-h-[1000px]`}
+        } w-full min-h-screen`}
       >
         {children}
       </main>
