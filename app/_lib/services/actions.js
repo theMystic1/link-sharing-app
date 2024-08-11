@@ -4,7 +4,7 @@ import { cookies } from "next/headers";
 import { supabase } from "../supabase/supabase";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { getUser } from "./data-service";
+import { createUser, getUser } from "./data-service";
 
 export async function createLink(link) {
   const { data, error } = await supabase.from("links").insert([link]);
@@ -26,7 +26,7 @@ export async function deleteLinkById(id) {
     throw new Error(error.message, "Unable to delete link");
   }
 
-  revalidatePath("/");
+  return redirect("/");
 }
 
 export async function updateLink(id, link) {
@@ -40,7 +40,7 @@ export async function updateLink(id, link) {
     throw new Error(error.message, "Unable to update link");
   }
 
-  revalidatePath("/");
+  revalidatePath(`/${id}`);
   return data;
 }
 
@@ -52,6 +52,7 @@ export async function signInAction(formData) {
   const { data, error } = await supabase.auth.signInWithPassword(userData);
 
   if (error) {
+    cookies()?.delete("user");
     console.error("Error signing in:", error.message);
     throw new Error(error.message);
   }
@@ -64,19 +65,17 @@ export async function signInAction(formData) {
     maxAge: oneDay,
   });
 
-  const existingUser = await getUser(data?.user.id);
+  const existingUser = await getUser(data?.user?.id);
 
   if (existingUser) {
     redirect("/");
-    return;
   }
 
   if (!existingUser) {
-    createUser(data?.user);
+    await createUser(data?.user);
 
     redirect("/");
   }
-  return { success: true };
 }
 
 export async function signup(formData) {
@@ -88,8 +87,7 @@ export async function signup(formData) {
     throw new Error(error.message); // Correctly throw an error
   }
 
-  redirect("/login");
-  return data;
+  return data, redirect("/login");
 }
 
 export async function getSession() {
@@ -102,9 +100,22 @@ export async function getSession() {
 
 export async function updateUser(id, user) {
   // Updating the user record with the correct image URL or path
+
+  const userId = cookies().get("user");
+
+  const curUser = await getUser(userId);
+
+  let userObj;
+  if (curUser?.imageUrl && user.imageUrl.includes("undefined"))
+    userObj = { ...user, imageUrl: curUser.imageUrl };
+
+  if (!curUser?.imageUrl && user.imageUrl.includes("undefined"))
+    userObj = { ...user, imageUrl: "" };
+  else userObj = { ...user };
+
   const { data, error } = await supabase
     .from("owners")
-    .update(user)
+    .update(userObj)
     .eq("user_Id", id)
     .select();
 
@@ -121,7 +132,7 @@ export async function updateUser(id, user) {
   return data;
 }
 
-// Uncomment this and implement signOut when needed
-// export async function signOutAction() {
-//   await signOut({ redirectTo: "/login" });
-// }
+export async function signOutAction() {
+  cookies()?.delete("user");
+  redirect("/login");
+}

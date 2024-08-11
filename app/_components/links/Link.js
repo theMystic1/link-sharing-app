@@ -1,8 +1,21 @@
+"use client";
+
 import arrRight from "@/public/assets/images/icon-arrow-right.svg";
 import Image from "next/image";
+import toast from "react-hot-toast";
 // import { Link } from "next/navigation";
 
 function LinkCont({ link }) {
+  async function handleCopy(e) {
+    e.preventDefault();
+    try {
+      await navigator.clipboard.writeText(link?.link);
+
+      toast.success("URL copied to clipboard");
+    } catch (error) {
+      console.error("Failed to copy: ", error);
+    }
+  }
   return (
     <button
       className={`w-full h-12 items-center justify-between  p-3 rounded-lg flex ${
@@ -32,6 +45,7 @@ function LinkCont({ link }) {
           ? "bg-orange-700"
           : "bg-amber-800"
       }`}
+      onClick={handleCopy}
     >
       <span className="flex gap-3 items-center">
         <div className="relative h-6 w-6">

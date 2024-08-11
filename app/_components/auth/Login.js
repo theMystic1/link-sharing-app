@@ -16,6 +16,7 @@ import { useFormStatus } from "react-dom";
 import Spinner from "../ui/Spinner";
 import SpinnerMini from "../ui/SpinnerMini";
 import { useState } from "react";
+import toast from "react-hot-toast";
 
 function Login() {
   const { register, formState, handleSubmit } = useForm();
@@ -29,6 +30,8 @@ function Login() {
     try {
       await signInAction(formData);
     } catch (error) {
+      toast.error(error.message);
+
       throw new Error(error);
     } finally {
       setPending(false);

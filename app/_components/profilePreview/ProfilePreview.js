@@ -1,21 +1,20 @@
+"use client";
+
 import Link from "next/link";
 import Button from "../ui/Button";
 import AuthHeader from "../auth/AuthHeader";
 import AuthMessage from "../auth/AuthMessage";
-import React from "react";
+import React, { useState } from "react";
 import Image from "next/image";
 import LinkCont from "@/app/_components/links/Link";
+import { signOutAction } from "@/app/_lib/services/actions";
+import toast from "react-hot-toast";
+import SpinnerMini from "../ui/SpinnerMini";
 
 function ProfilePreview({ links, curUser }) {
   // const links = [1, 2, 3, 4];
 
   const emptylinks = [1, 2, 3, 4, 5];
-
-  const maxLinks = links;
-
-  // const emptyLinksNeeded = 5 - maxLinks?.length;
-
-  // const linksOrEmptyLinks = [...maxLinks, ...emptylinks];
 
   return (
     <div className="">
@@ -67,14 +66,30 @@ function PurpleBg({ children }) {
 }
 
 function Nav() {
+  const [isLoading, setIsLoading] = useState(false);
+  async function logout() {
+    setIsLoading(true);
+    try {
+      await signOutAction();
+    } catch (error) {
+      toast.error(error);
+    } finally {
+      setIsLoading(false);
+      toast.success("Logged out successfully");
+    }
+  }
   return (
     <nav className="w-full h-20 bg-white-200 p-4 flex justify-between items-center rounded-lg">
       <Link href="/">
         <Button type="secondary">Back to Editor</Button>
       </Link>
-      <Link href="/details">
-        <Button>Share Link</Button>
-      </Link>
+      {isLoading ? (
+        <Button>
+          <SpinnerMini />
+        </Button>
+      ) : (
+        <Button onClick={logout}>Logout &#8594;</Button>
+      )}
     </nav>
   );
 }

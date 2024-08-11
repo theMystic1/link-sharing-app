@@ -1,7 +1,10 @@
 import { cookies } from "next/headers";
 import ProfilePreview from "../_components/profilePreview/ProfilePreview";
-import { signOutAction } from "../_lib/services/actions";
 import { getLinks, getUser } from "../_lib/services/data-service";
+
+export const metadata = {
+  title: "Preview page",
+};
 
 async function page() {
   const id = cookies().get("user").value.trim();

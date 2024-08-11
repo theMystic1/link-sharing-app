@@ -12,9 +12,17 @@ import { useForm } from "react-hook-form";
 import { updateUser } from "@/app/_lib/services/actions";
 import SpinnerMini from "../ui/SpinnerMini";
 import { uploadImage } from "@/app/_lib/services/data-service";
+import toast from "react-hot-toast";
 
 function DetailsForm({ curUser }) {
-  const { register, handleSubmit, reset, formState } = useForm();
+  const { register, handleSubmit, reset, formState } = useForm({
+    defaultValues: {
+      email: curUser?.email,
+      imageUrl: curUser?.imageUrl,
+    },
+  });
+
+  // console.log(curUser.imageUrl);
 
   const [isLoading, setIsLoading] = useState(false);
 
@@ -24,25 +32,29 @@ function DetailsForm({ curUser }) {
     setIsLoading(true);
 
     try {
-      let imageUrl = data.imageUrl; // Default to existing imageUrl
+      let imageUrl = data?.imageUrl;
 
       if (data.imageUrl[0]) {
-        // If a new image was uploaded
-        imageUrl = await uploadImage(data.imageUrl[0]); // Upload the image and get the URL
+        imageUrl = await uploadImage(data.imageUrl[0]);
       }
 
-      // Create the user object with serializable data
-      const dataObj = { ...data, imageUrl };
+      let dataObj;
+      if (data?.imageUrl) dataObj = { ...data, imageUrl };
+      if (!data?.imageUrl) dataObj = { ...data, imageUrl: curUser?.imageUrl };
 
-      // Call the server-side function with serializable data
       await updateUser(curUser.user_Id, dataObj);
       reset();
+      toast.success("Your changes have been successfully saved!");
     } catch (error) {
       console.error("Error during submission:", error);
       throw new Error(error);
     } finally {
       setIsLoading(false);
     }
+  }
+
+  function log() {
+    console.log("logged");
   }
 
   return (
@@ -118,7 +130,6 @@ function DetailsForm({ curUser }) {
           />
         </span>
       </FlexDiv>
-      <div className="h-36 "></div>
       <div className="border-t border-t-greyy-200 py-6 flex justify-end ">
         <Button onClick={handleSubmit(onSubmit)}>
           {isLoading ? <SpinnerMini /> : "Save"}
@@ -136,7 +147,7 @@ function FlexDiv({ children }) {
   );
 }
 
-function ImageAdd({ register, curUser }) {
+function ImageAdd({ register, curUser, errors }) {
   const [img, setImg] = useState(null);
 
   const { imageUrl } = curUser || {};
@@ -166,7 +177,7 @@ function ImageAdd({ register, curUser }) {
           onChange={handleFileUpload}
           id="imageUrl"
           {...register("imageUrl", {
-            required: "Please upload an image",
+            required: "Please upload an image file (JPG, PNG)",
           })}
         />
         {img || imageUrl ? (
@@ -175,7 +186,6 @@ function ImageAdd({ register, curUser }) {
               <Image
                 src={imageUrl ? imageUrl : img}
                 fill
-                objectFit="cover"
                 alt="Uploaded Image"
                 quality={80}
               />
@@ -185,7 +195,7 @@ function ImageAdd({ register, curUser }) {
                 className="absolute z-50 inset-0 opacity-0 cursor-pointer"
                 onChange={handleFileUpload}
                 {...register("imageUrl", {
-                  required: "Please upload an image",
+                  required: "Please upload an image file (JPG, PNG)",
                 })}
               />
               <div className="absolute inset-0 bg-black opacity-50 rounded-md"></div>
@@ -208,7 +218,9 @@ function ImageAdd({ register, curUser }) {
       </button>
 
       <p className="text-greyy-700 text-lg lg:text-[12px] xl:text-sm">
-        Image must be below 1024x1024px. Use PNG or JPG format.
+        {errors?.imageUrl?.message
+          ? errors?.imageUrl.message
+          : " Image must be below 1024x1024px. Use PNG or JPG format."}
       </p>
     </div>
   );

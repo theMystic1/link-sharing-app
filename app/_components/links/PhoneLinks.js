@@ -37,7 +37,7 @@ function PhoneLinks({ links, curUser }) {
                 />
               ) : null}
             </div>
-            <h1 className=" text-greyy-900 font-bold text-xl">
+            <h1 className=" text-greyy-900 font-bold text-center text-xl">
               {curUser?.firstName ? (
                 `${curUser?.firstName}  ${curUser?.lastName}`
               ) : (

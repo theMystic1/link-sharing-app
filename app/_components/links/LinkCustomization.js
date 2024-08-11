@@ -11,14 +11,17 @@ import LinkForm from "./LinkForm";
 import { useForm } from "react-hook-form";
 import { linkTypes } from "@/app/_lib/services/data-service";
 import SpinnerMini from "../ui/SpinnerMini";
-import { revalidatePath } from "next/cache";
-import { createLink, updateLink } from "@/app/_lib/services/actions";
+import { createLink } from "@/app/_lib/services/actions";
+import { Reorder } from "framer-motion";
+import { useParams } from "next/navigation";
+import toast from "react-hot-toast";
 
-function LinkCustomization({ id, links }) {
+function LinkCustomization({ id, userLinks, setUserLinks }) {
   const [isForm, setIsForm] = useState(false);
   const [activeLink, setActiveLink] = useState(null);
-  const [activeLinkById, setActiveLinkById] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const { linkId } = useParams();
+
   const {
     register,
     formState,
@@ -48,8 +51,10 @@ function LinkCustomization({ id, links }) {
         owner_Id: id,
         icon: linkTypes.find((link) => link.id === activeLink.id).linkIcon.src,
       };
+
       await createLink(dataObj);
       reset();
+      toast.success("Link created successfully!!");
     } catch (error) {
       throw new Error(error);
     } finally {
@@ -66,38 +71,46 @@ function LinkCustomization({ id, links }) {
         world!
       </AuthMessage>
 
-      <Button type="secondary" onClick={handleForm}>
+      <Button
+        type="secondary"
+        onClick={handleForm}
+        disabled={linkId ? true : false}
+      >
         + Add new link
       </Button>
       {isForm ? (
-        <LinkForm
-          formNum={1}
-          onHandleFormClose={hideLinkForm}
-          register={register}
-          errors={errors}
-          getValues={getValues}
-          setError={setError}
-          activeLink={activeLink}
-          setActiveLink={setActiveLink}
-          type="new"
-          setValue={setValue}
-        />
-      ) : links.length > 0 ? (
-        links?.map((link, i) => (
+        <Reorder.Group values={[]}>
           <LinkForm
-            key={link.id}
-            formNum={i + 1}
+            formNum={1}
+            onHandleFormClose={hideLinkForm}
             register={register}
-            activeLink={activeLink}
-            setActiveLink={setActiveLink}
             errors={errors}
             getValues={getValues}
             setError={setError}
-            link={link}
-            type="edit"
+            activeLink={activeLink}
+            setActiveLink={setActiveLink}
+            type="new"
             setValue={setValue}
           />
-        ))
+        </Reorder.Group>
+      ) : userLinks?.length > 0 ? (
+        <Reorder.Group values={userLinks} as="main" onReorder={setUserLinks}>
+          {userLinks?.map((link, i) => (
+            <LinkForm
+              key={link.id}
+              formNum={i + 1}
+              register={register}
+              activeLink={activeLink}
+              setActiveLink={setActiveLink}
+              errors={errors}
+              getValues={getValues}
+              setError={setError}
+              link={link}
+              type="edit"
+              setValue={setValue}
+            />
+          ))}
+        </Reorder.Group>
       ) : (
         <>
           <div className="bg-greyy-100 w-full rounded-sm flex flex-col gap-6 items-center justify-center mt-8 ">
@@ -114,12 +127,16 @@ function LinkCustomization({ id, links }) {
           </div>
         </>
       )}
-      <div className="h-24 "></div>
 
       <div className="border-t border-t-greyy-200 py-6 flex justify-end ">
-        <Button onClick={handleSubmit(onSubmit)}>
-          {isLoading ? <SpinnerMini /> : "Save"}
-        </Button>
+        {linkId ? null : (
+          <Button
+            onClick={handleSubmit(onSubmit)}
+            disabled={linkId ? true : false}
+          >
+            {isLoading ? <SpinnerMini /> : "Save"}
+          </Button>
+        )}
       </div>
     </div>
   );

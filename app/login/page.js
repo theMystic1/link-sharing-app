@@ -1,6 +1,9 @@
 import Login from "../_components/auth/Login";
 import Logo from "../_components/ui/Logo";
-import { signInAction } from "../_lib/services/actions";
+
+export const metadata = {
+  title: "Login page",
+};
 
 function page() {
   return (

@@ -15,10 +15,11 @@ import Link from "next/link";
 import SpinnerMini from "../ui/SpinnerMini";
 import { signup } from "@/app/_lib/services/actions";
 import { useState } from "react";
+import toast from "react-hot-toast";
 
 function Signup() {
   const { register, formState, getValues, handleSubmit } = useForm();
-  const [pending, setPending ] = useState(false);
+  const [pending, setPending] = useState(false);
 
   const { errors } = formState;
 
@@ -27,6 +28,8 @@ function Signup() {
     try {
       await signup(formData);
     } catch (error) {
+      toast.error(error.message);
+
       throw new Error(error);
     } finally {
       setPending(false);

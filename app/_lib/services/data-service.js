@@ -71,6 +71,7 @@ import youtubeActive from "@/public/assets/images/icon-youtube-active.svg";
 import youtubeActivecopy from "@/public/assets/images/icon-youtube-active-copy.svg";
 
 import { revalidatePath } from "next/cache";
+import { notFound } from "next/navigation";
 
 export async function createUser(user) {
   const userObj = {
@@ -105,7 +106,7 @@ export async function getUsers() {
 // Client-side file upload function
 export async function uploadImage(file) {
   const imageName = `${Math.random()}-${file.name}`.replaceAll("/", "");
-  
+
   const { error: storageError, data } = await supabase.storage
     .from("profile-pictures")
     .upload(imageName, file);
@@ -122,27 +123,16 @@ export async function uploadImage(file) {
 }
 
 export async function getUser(id) {
-  // const users = await getUsers();
-
-  // const user = users?.find(
-  //   (u) => u.user_Id.toLowerCase() === id?.toLowerCase()
-  // );
-
-  // console.log(users[0].user_Id);
-  // console.log(id);
-
-  // return user;
-
   const { data, error } = await supabase
     .from("owners")
     .select("*")
     .eq("user_Id", id)
     .single();
 
-  if (error) {
-    console.error(error);
-    throw new error(error.message, "Unable to get users");
-  }
+  // if (error) {
+  //   console.error(error);
+  //   throw new error(error, "Unable to get user");
+  // }
 
   return data;
 }
@@ -151,7 +141,7 @@ export async function createLink(link) {
   const { data, error } = await supabase.from("links").insert([link]);
 
   if (error) {
-    console.error(error);
+    console.error(error.message);
     throw new Error(error.message, "Unable to create link");
   }
 
@@ -165,12 +155,33 @@ export async function getLinks(id) {
     .eq("owner_Id", id);
 
   if (error) {
-    console.error(error);
+    console.error(error.message);
     throw new error(error.message, "Unable to get Links");
   }
 
   return data;
 }
+
+export async function getLink(id, linkId) {
+  try {
+    const data = await getLinks(id);
+
+    // Find the object that matches the linkId
+    const dataObj = data?.find((link) => link.id === Number(linkId));
+
+    // Initialize an empty array and push the found object into it
+    const linkArr = [];
+    linkArr.push(dataObj);
+
+    // Log the array and return it
+    return linkArr;
+  } catch (error) {
+    console.error(error);
+    notFound();
+  }
+}
+
+
 
 export const linkTypes = [
   {

@@ -1,7 +1,9 @@
 import Signup from "../_components/auth/Signup";
 import Logo from "../_components/ui/Logo";
-import { signup } from "../_lib/services/actions";
 
+export const metadata = {
+  title: "Sign up page",
+};
 async function page() {
   // const data = await signup();
   return (

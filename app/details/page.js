@@ -3,6 +3,10 @@ import DetailsForm from "../_components/details/DetailsForm";
 import PhoneLinks from "../_components/links/PhoneLinks";
 import { getLinks, getUser } from "../_lib/services/data-service";
 
+export const metadata = {
+  title: "Details page",
+};
+
 async function page() {
   const id = cookies().get("user").value.trim();
 
